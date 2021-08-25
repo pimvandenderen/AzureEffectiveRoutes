@@ -1,0 +1,2 @@
+﻿#Excluded subnets 
+$exclsubnets = @("AzureBastionSubnet")
