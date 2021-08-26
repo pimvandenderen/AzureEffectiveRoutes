@@ -46,27 +46,27 @@ foreach ($sub in $subscriptions) {
             
             foreach ($snet in ($snets | Where-Object{$exclsubnets -notcontains $_.Name})) {
                 
-                if ($snet.RouteTable.count -eq 0) {
+                # if ($snet.RouteTable.count -eq 0) {
 
-                    # There is no route table attached. 
-                    Write-host "Subnet "$snet.Name" has no route table attached"
-                    write-host "Assuming a default route to the internet "
-                    $rtname = ""
+                #     # There is no route table attached. 
+                #     Write-host "Subnet "$snet.Name" has no route table attached"
+                #     write-host "Assuming a default route to the internet "
+                #     $rtname = ""
                     
-                } else {
+                # } else {
 
-                    # There is a route table attached. 
-                    $rtname = (($snet.RouteTable.ID).Split("/"))[-1]
-                    Write-Host "Subnet "$snet.Name" has a route table attached. Route table name is $rtname in subscription "$sub.Name""
+                    # # There is a route table attached. 
+                    # $rtname = (($snet.RouteTable.ID).Split("/"))[-1]
+                    # Write-Host "Subnet "$snet.Name" has a route table attached. Route table name is $rtname in subscription "$sub.Name""
 
-                    # Since there is a route table attached, check if there is a VM we can use for the effective routes. 
+                    # Check if there is a VM we can use for the effective routes. 
                     foreach ($id in ($snet.IpConfigurations.ID | Where-Object {$_.NICID.count} -ne 0)) {
                         $vmnic = ParseAzNetworkInterfaceID -resourceID $id 
                         $vmnic = Get-AzNetworkInterface -Name $vmnic[2]
                     
                         if (!($vmnic.VirtualMachine)) {
                             # No VM is attached to the NIC.
-                            write-host "No VM is attached to NIC: $($vmnic.Name)"   
+                            write-host "No VM is attached to NIC: $($vmnic.Name) or this NIC is not for a virtual machine"   
                         } else { 
                             # NIC has a VM attached, check the status of the VM. 
                             $vm = Get-AzVM -Name (($vmnic.VirtualMachine.Id.Split("/") | Select-Object -Last 1)) -Status
@@ -85,7 +85,7 @@ foreach ($sub in $subscriptions) {
                     }
 
 
-                }
+                #}
 
                 $rt = New-Object System.Object
                 $rt | Add-Member -MemberType NoteProperty -Name "SubscriptionID" -Value $sub.Id
@@ -121,42 +121,50 @@ $outputs = New-Object System.Collections.ArrayList
 
 foreach ($vm in $rts) {
 
+
+    # Check if a route table is attached to the subnet
     if ($vm.RouteTableName -eq "") { 
-        # No Route table is associated to the subnet. 
         $rtattached = "No"
-    }
-
-    $nicinfo = ParseAzNetworkInterfaceID -resourceID $vm.VmNicID
-    $nicroutes = Get-AzEffectiveRouteTable -ResourceGroupName $nicinfo[1] -NetworkInterfaceName $nicinfo[2]
-                                    
-    # Check if BGP Propgation is enabled on the route table
-    if ($nicroutes[0].DisableBgpRoutePropagation -eq "True") {
-        $bgppropagation = "Disabled"
     } else {
-        $bgppropagation = "Enabled"
+        $rtattached = "Yes"
     }
+    
+    # Check if there is a VM we can use on this subnet to get the effective routes 
+    if ($vm.VMName -ne "") {
 
-    # Check if internet access is overwritten
-    if (($nicroutes | Where-Object {$_.NextHopType -eq "Internet" -and $_.State -eq "Active"}).count -ne 0) {
-        $internetaccess = "Enabled"
-        
-        # Print effective internet routes
-        $inetroutes = $nicroutes | Where-Object {$_.NextHopType -eq "Internet" -and $_.State -eq "Active"} | Select-Object AddressPrefix
+        $nicinfo = ParseAzNetworkInterfaceID -resourceID $vm.VmNicID
+        $nicroutes = Get-AzEffectiveRouteTable -ResourceGroupName $nicinfo[1] -NetworkInterfaceName $nicinfo[2] 
 
-    } else { 
-        $internetaccess = "Disabled"
-        $inetroutes.AddressPrefix = ""
-    }
+        # Check if BGP Propgation is enabled
+        if ($nicroutes[0].DisableBgpRoutePropagation -eq "True") {
+            $bgppropagation = "Disabled"
+        } else {
+            $bgppropagation = "Enabled"
+        }
 
-    # Check for routes to the Virtual Network Gateway
-    if (($nicroutes | Where-Object {$_.NextHopType -eq "VirtualNetworkGateway" -and $_.State -eq "Active"}).count -ne 0) {
-        $gatewayroutes = "Enabled"
-        
-        #Print effective Virtual Network Gateway Routes
-        $vngroutes = $nicroutes | Where-Object {$_.NextHopType -eq "VirtualNetworkGateway" -and $_.State -eq "Active"} | Select-Object AddressPrefix
-    } else { 
-        $gatewayroutes = "Disabled"
-        $vngroutes.AddressPrefix = ""
+        # Check if internet access is overwritten
+        if (($nicroutes | Where-Object {$_.NextHopType -eq "Internet" -and $_.State -eq "Active"}).count -ne 0) {
+            $internetaccess = "Enabled"
+            
+            # Print effective internet routes
+            $inetroutes = $nicroutes | Where-Object {$_.NextHopType -eq "Internet" -and $_.State -eq "Active"} | Select-Object AddressPrefix
+
+        } else { 
+            $internetaccess = "Disabled"
+            $inetroutes.AddressPrefix = ""
+        }
+
+        # Check for routes to the Virtual Network Gateway
+        if (($nicroutes | Where-Object {$_.NextHopType -eq "VirtualNetworkGateway" -and $_.State -eq "Active"}).count -ne 0) {
+            $gatewayroutes = "Enabled"
+            
+            #Print effective Virtual Network Gateway Routes
+            $vngroutes = $nicroutes | Where-Object {$_.NextHopType -eq "VirtualNetworkGateway" -and $_.State -eq "Active"} | Select-Object AddressPrefix
+        } else { 
+            $gatewayroutes = "Disabled"
+            $vngroutes.AddressPrefix = ""
+        }
+
     }
 
     $output = New-Object System.Object
