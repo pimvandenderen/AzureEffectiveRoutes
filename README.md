@@ -53,7 +53,6 @@ Now you have the HTML report, it's time to interpert the report.
 * Is BGP route properation enabled/disabled on Route Tables where you did/did not expect it to? 
 <br>
 
-
 ## FAQ
 **Q:** What does this script do? 
 _A:_ This script checks all the subscriptions in the Azure tenants for vNETs, subnet's and route tables attached to the subnets. For each subnet it will check if there is a virtual machine attached to the subnet that is up and running to get the effective routes for that subnet.
