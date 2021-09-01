@@ -55,14 +55,14 @@ Now you have the HTML report, it's time to interpert the report.
 <br>
 
 ## FAQ
-**Q:** What does this script do? 
+**Q:** What does this script do? <br>
 _A:_ This script checks all the subscriptions in the Azure tenants for vNETs, subnet's and route tables attached to the subnets. For each subnet it will check if there is a virtual machine attached to the subnet that is up and running to get the effective routes for that subnet.
 
-**Q:** What does this script **not** do? 
+**Q:** What does this script **not** do? <br>
 _A:_ This script is only for informational purposes. It doesn't make any changes to existing routing or fix any issues that are discovered in the report. 
 
-**Q:** I need more help understanding the report. 
+**Q:** I need more help understanding the report. <br>
 _A:_ Please feel free to reach out to me on Linkedin at https://www.linkedin.com/in/pimvandenderen/ or on Twitter at https://twitter.com/pimmerd90 if you have additional questions. 
 
-**Q:** How can I submit feedback
+**Q:** How can I submit feedback <br>
 _A:_ I'd love to get some feedback, please open an issue on Github with a description of your finding or reach out to me directly. 
