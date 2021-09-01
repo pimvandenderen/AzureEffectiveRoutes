@@ -48,7 +48,7 @@ LoadModule "Az.Compute"
 # Variables
 #-------------------
 # Exclude subscriptions that you don't want to check
-$exclsubscriptions = @("sub-onprem")
+$exclsubscriptions = @("")
 
 # Exclude VNETs that you don't want to check 
 $exclvnets = @("myVNET")
@@ -168,7 +168,7 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
                 $output | Add-Member -MemberType NoteProperty -Name "Subnet Name" -Value $snet.Name
                 $output | Add-Member -MemberType NoteProperty -Name "RouteTable Attached" -Value $rtattached
                 $output | Add-Member -MemberType NoteProperty -Name "RouteTable Name" -Value $rtname
-                $output | Add-Member -MemberType NoteProperty -Name "BGP Propagatation" -Value $bgppropagation
+                $output | Add-Member -MemberType NoteProperty -Name "BGP Propagation" -Value $bgppropagation
                 $output | Add-Member -MemberType NoteProperty -Name "Internet Routes" -Value $internetaccess
                 $output | Add-Member -MemberType NoteProperty -Name "InternetAddress Prefix" -Value $inetroutes
                 $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway Routes" -Value $gatewayroutes
