@@ -72,7 +72,7 @@ if (Test-Path $filepath) {
     }
 
 } else { 
-    Write-host "File path is not found, please check if the path under exists "
+    Write-host "File path is not found, please make sure the path $($filepath) exists "
     Break
 }
 
