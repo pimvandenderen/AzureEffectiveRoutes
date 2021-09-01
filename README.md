@@ -8,6 +8,7 @@ of UDR's and BGP routes, however it is easy to overlook some. The goal of this s
 ## How does it work
 This script checks all the subscriptions in the Azure tenants for vNETs, subnet's and route tables attached to the subnets. For each subnet it will check if there is a virtual machine attached to the subnet that is up and running to get the effective routes for that subnet. At the moment, Azure doesn't support getting effective routes for a subnet / NIC without a running virtual machine.
 
+
 ## Variables
 By default, this script checks all the subscriptions, VNET's and subnet's. You can exclude subscriptions, vNETs and subnets under the variable section in the script. I recommend to leave the "AzureBastionSubnet" in there since it's currently not supported to have UDR's on the AzureBastionSubnet (https://docs.microsoft.com/en-us/azure/bastion/bastion-faq). If you want to add subnet's, please make sure you comma seperate them, for example: @("AzureBastionSubnet", "MyOtherSubnet")
 
@@ -43,3 +44,25 @@ _Internet Routes:_ The routes on the route table that have a _Next Hop Type_ as 
 _InternetAddress Prefix:_ If there are active Internet routes, these are the active Internet routes<br>
 _VirtualNetworkGateway Routes:_ The routes on the route table that have a _Next Hop Type_ as Virtual Network Gateway and are active<br>
 _VirtualNetworkGateway AddressPrefix:_ If there are active Virtual Network Gateway routes, these are the active Virtual Network Gateway routes<br>
+
+## Next Steps
+Now you have the HTML report, it's time to interpert the report. 
+* Are there any routes going directly to the internet that you didn't expect? 
+* Are there any routes not going to the Network Virtual Appliance (NVA) that you want to? 
+* Are there any routes not going / going to the Virtual Network Gateway? 
+* Is BGP route properation enabled/disabled on Route Tables where you did/did not expect it to? 
+<br>
+
+
+## FAQ
+**Q:** What does this script do? 
+_A:_ This script checks all the subscriptions in the Azure tenants for vNETs, subnet's and route tables attached to the subnets. For each subnet it will check if there is a virtual machine attached to the subnet that is up and running to get the effective routes for that subnet.
+
+**Q:** What does this script **not** do? 
+_A:_ This script is only for informational purposes. It doesn't make any changes to existing routing or fix any issues that are discovered in the report. 
+
+**Q:** I need more help understanding the report. 
+_A:_ Please feel free to reach out to me on Linkedin at https://www.linkedin.com/in/pimvandenderen/ or on Twitter at https://twitter.com/pimmerd90 if you have additional questions. 
+
+**Q:** How can I submit feedback
+_A:_ I'd love to get some feedback, please open an issue on Github with a description of your finding or reach out to me directly. 
