@@ -11,14 +11,20 @@ This script checks all the subscriptions in the Azure tenants for vNETs, subnet'
 ## Variables
 By default, this script checks all the subscriptions, VNET's and subnet's. You can exclude subscriptions, vNETs and subnets under the variable section in the script. I recommend to leave the "AzureBastionSubnet" in there since it's currently not supported to have UDR's on the AzureBastionSubnet (https://docs.microsoft.com/en-us/azure/bastion/bastion-faq). If you want to add subnet's, please make sure you comma seperate them, for example: @("AzureBastionSubnet", "MyOtherSubnet")
 
+Note: This works in a "top down" approach. For example: If you exclude a subscription, you don't have to exclude the VNETs and subnet's within the subscription.
+
 $exclsubscriptions
+_Optional_
 Add the full name of the subscription(s) that you want to exclude. 
 
 $exclvnets
+_Optional_
 Add the full name of the VNET(s) that you want to exclude
 
 $exclsubnets
-Add the full name of thte subnet(s) that you want to exclude. 
+_Optional_
+Add the full name of the subnet(s) that you want to exclude. 
 
-Note: This works in a "top down" approach. For example: If you exclude a subscription, you don't have to exclude the VNETs and subnet's within the subscription.
-
+$filepath
+_**Required**_
+The path where you want to store the outputted HTML file. 
