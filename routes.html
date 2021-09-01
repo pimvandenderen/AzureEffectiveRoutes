@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+TABLE {
+    border-width: 1px; 
+    border-style: solid;
+    border-color: black;
+    border-collapse: collapse;
+}
+TH {
+    border-width: 1px; 
+    padding: 3px; 
+    border-style: solid; 
+    border-color: black; 
+    background-color: #6495ED;
+}
+TD {
+    border-width: 1px; 
+    padding: 3px; 
+    border-style: solid; 
+    border-color: black;
+}
+</style>
+</head><body>
+<h1> Report Details </h1> 
+<p> The report was run on 09/01/2021 10:58:47. </p>
+<p> The report was run by northamerica\pvandenderen.</p>
+<br>
+<table>
+<colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup>
+<tr><th>Subscription Name</th><th>vNet Name</th><th>Subnet Name</th><th>RouteTable Attached</th><th>RouteTable Name</th><th>BGP Properation</th><th>Internet Routes</th><th>InternetAddress Prefix</th><th>VirtualNetworkGateway Routes</th><th>VirtualNetworkGateway AddressPrefix</th></tr>
+<tr><td>sub-test-dev-spoke</td><td>MUFGDestvnet</td><td>MyDestSubnet</td><td style = 'background-color:#FF8080'>No</td><td></td><td>Enabled</td><td>Enabled</td><td>0.0.0.0/0</td><td>Disabled</td><td></td></tr>
+<tr><td>sub-test-dev-spoke</td><td>MUFGTestVNET</td><td>FirstSubnet</td><td style = 'background-color:#FF8080'>No</td><td></td><td>Enabled</td><td>Enabled</td><td>0.0.0.0/0</td><td>Disabled</td><td></td></tr>
+<tr><td>sub-onprem</td><td>Hub-Vnet</td><td>HubSubnet</td><td style = 'background-color:#FF8080'>No</td><td></td><td>Enabled</td><td>Enabled</td><td>0.0.0.0/0</td><td>Disabled</td><td></td></tr>
+<tr><td>sub-production-spoke</td><td>wvd-vnet</td><td>wvd-snet</td><td>Yes</td><td>Azure-rt</td><td>Disabled</td><td>Enabled</td><td>0.0.0.0/0, 129.142.56.78/32</td><td>Enabled</td><td>192.168.0.0/16, 172.16.0.0/12</td></tr>
+<tr><td>sub-production-spoke</td><td>wvd-vnet</td><td>GatewaySubnet</td><td>Yes</td><td>Azure-rt</td><td>Disabled</td><td>Enabled</td><td>0.0.0.0/0, 129.142.56.78/32</td><td>Enabled</td><td>192.168.0.0/16, 172.16.0.0/12</td></tr>
+</table>
+</body></html>
