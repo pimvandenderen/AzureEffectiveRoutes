@@ -28,3 +28,6 @@ Add the full name of the subnet(s) that you want to exclude.
 $filepath <br>
 Required: _**Yes**_ <br>
 The path where you want to store the outputted HTML file. 
+
+## Example 
+![AzureEffectiveRoutes] (/Images/AzureEffectiveRoutes.png)
