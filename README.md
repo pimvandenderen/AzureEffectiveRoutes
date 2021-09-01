@@ -30,4 +30,5 @@ Required: _**Yes**_ <br>
 The path where you want to store the outputted HTML file. 
 
 ## Example 
-![AzureEffectiveRoutes] (/Images/AzureEffectiveRoutes.PNG)
+
+![AzureEffectiveRoutes](/Images/AzureEffectiveRoutes.PNG)
