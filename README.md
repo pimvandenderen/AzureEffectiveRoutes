@@ -13,18 +13,18 @@ By default, this script checks all the subscriptions, VNET's and subnet's. You c
 
 Note: This works in a "top down" approach. For example: If you exclude a subscription, you don't have to exclude the VNETs and subnet's within the subscription.
 
-$exclsubscriptions
-_Optional_
+$exclsubscriptions <br>
+_Optional_ <br>
 Add the full name of the subscription(s) that you want to exclude. 
 
-$exclvnets
-_Optional_
+$exclvnets <br>
+_Optional_ <br>
 Add the full name of the VNET(s) that you want to exclude
 
-$exclsubnets
-_Optional_
+$exclsubnets <br>
+_Optional_ <br>
 Add the full name of the subnet(s) that you want to exclude. 
 
-$filepath
-_**Required**_
+$filepath <br>
+_**Required**_ <br>
 The path where you want to store the outputted HTML file. 
