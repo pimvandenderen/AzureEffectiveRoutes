@@ -46,24 +46,43 @@ LoadModule "Az.Compute"
 
 
 # Variables
+#-------------------
+# Exclude subscriptions that you don't want to check
+$exclsubscriptions = @("sub-onprem")
+
+# Exclude VNETs that you don't want to check 
+$exclvnets = @("myVNET")
 
 # Exclude subnet's that you don't want to check (comma seperated)
-$exclsubnets = @("AzureBastionSubnet", "AzureFirewallSubnet")
+$exclsubnets = @("AzureBastionSubnet")
 
 # Path of the HTML file to output
-$htmlfile = "C:\PvD\Git\AzureEffectiveRoutes\routes.html"
+$filepath = "C:\PvD\Git\AzureEffectiveRoutes"
+#-------------------
+
 
 
 # Connect to Azure
 Connect-AzAccount
 
+# Check if the output path exists
+if (Test-Path $filepath) {
+    if ($filepath -notmatch '\\$') { 
+        $filepath += '\'
+    }
+
+} else { 
+    Write-host "File path is not found, please check if the path under exists "
+    Break
+}
+
 
 $outputs = New-Object System.Collections.ArrayList
 $subscriptions = Get-AzSubscription
 
-foreach ($sub in $subscriptions) { 
+foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains $_.Name})) { 
     Get-AzSubscription -SubscriptionName $sub.Name | Set-AzContext
-    $vnets = Get-AzVirtualNetwork
+    $vnets = Get-AzVirtualNetwork | Where-Object {$exclvnets -notcontains $_.Name}
 
     foreach ($vnet in $vnets) { 
         $snets = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet
@@ -203,7 +222,7 @@ $body = @"
 
 $outputs | ConvertTo-Html -Head $Header -body $body| ForEach-Object { 
     $PSitem -replace "<td>No</td>", "<td style = 'background-color:#FF8080'>No</td>"
-} | Out-File -FilePath $htmlfile
+} | Out-File -FilePath "$filepath\AzureEffectiveRoutes.html"
 
 
 
