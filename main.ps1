@@ -1,4 +1,4 @@
-﻿# Load the PowerShell Modules
+﻿# Load the PowerShell Modules 
 function ParseAzNetworkInterfaceID {
     param (
        [string]$resourceID
