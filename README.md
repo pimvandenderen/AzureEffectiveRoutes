@@ -9,7 +9,7 @@ of UDR's and BGP routes, however it is easy to overlook some. The goal of this s
 This script checks all the subscriptions in the Azure tenants for vNETs, subnet's and route tables attached to the subnets. For each subnet it will check if there is a virtual machine attached to the subnet that is up and running to get the effective routes for that subnet. At the moment, Azure doesn't support getting effective routes for a subnet / NIC without a running virtual machine.
 
 
-## Variables
+## Variables and parameters
 By default, this script checks all the subscriptions, VNET's and subnet's. You can exclude subscriptions, vNETs and subnets under the variable section in the script. I recommend to leave the "AzureBastionSubnet" in there since it's currently not supported to have UDR's on the AzureBastionSubnet (https://docs.microsoft.com/en-us/azure/bastion/bastion-faq). If you want to add subnet's, please make sure you comma seperate them, for example: @("AzureBastionSubnet", "MyOtherSubnet")
 
 Note: This works in a "top down" approach. For example: If you exclude a subscription, you don't have to exclude the VNETs and subnet's within the subscription.
@@ -18,26 +18,26 @@ $filepath <br>
 Required: _**Yes**_ <br>
 The path where you want to store the outputted HTML file. 
 
+.EXAMPLE <br>
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" <br>
+
 $exclsubscriptions <br>
 Required: _No_ <br>
 Add the full name of the subscription(s) that you want to exclude. 
+
+.EXAMPLE <br>
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclsubscriptions "app-sub" <br>
 
 $exclvnets <br>
 Required: _No_ <br>
 Add the full name of the VNET(s) that you want to exclude
 
+.EXAMPLE <br>
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclvnets "app-vnet" <br>
+
 $exclsubnets <br>
 Required: _No_ <br>
 Add the full name of the subnet(s) that you want to exclude.
-
-.EXAMPLE <br>
-.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" <br>
-
-.EXAMPLE <br>
-.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclsubscriptions "app-sub" <br>
-
-.EXAMPLE <br>
-.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclvnets "app-vnet" <br>
 
 .EXAMPLE <br>
 .\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclsubnets "app-snet" <br>
