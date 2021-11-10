@@ -54,7 +54,7 @@ $exclsubscriptions = @("")
 $exclvnets = @("myVNET")
 
 # Exclude subnet's that you don't want to check (comma seperated)
-$exclsubnets = @("AzureBastionSubnet")
+$exclsubnets = @("AzureBastionSubnet", "RouteServerSubnet")
 
 # Path of the HTML file to output
 $filepath = "C:\PvD\Git\AzureEffectiveRoutes"
@@ -81,44 +81,57 @@ $outputs = New-Object System.Collections.ArrayList
 $subscriptions = Get-AzSubscription
 
 foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains $_.Name})) { 
-    Get-AzSubscription -SubscriptionName $sub.Name | Set-AzContext
+    Set-AzContext -SubscriptionId $sub.SubscriptionId
     $vnets = Get-AzVirtualNetwork | Where-Object {$exclvnets -notcontains $_.Name}
 
     foreach ($vnet in $vnets) { 
+        
         $snets = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet
-
+        # Check if there are subnet's in the VNET
         if (($snets.count -ne 0)) {
-        # There are subnet's in the vnet, certain subnets are excluded.
             
-            foreach ($snet in ($snets | Where-Object{$exclsubnets -notcontains $_.Name})) {
+            # Loop through all the subnets in the VNET, filter out excluded subnets
+            $snets = $snets | Where-Object {$exclsubnets -notcontains $_.Name}
 
-                # Check if there is a VM we can use for the effective routes. 
-                foreach ($id in ($snet.IpConfigurations.ID | Where-Object {$_.NICID.count} -ne 0)) {
-                    $vmnic = ParseAzNetworkInterfaceID -resourceID $id 
+            foreach ($snet in $snets) {
+
+                # Check if there is a VM we can use for the effective routes per subnet
+                if (($snet.IpConfigurations.ID).count -ne 0) {
+
+                    # Check if there is a route table attached 
+                    if (!$snet.RouteTable) {
+                        $rtattached = "No"
+                    } else { 
+                        $rtattached = "Yes"
+                        $rtname = ($snet.RouteTable.ID.Split("/") | Select-Object -Last 1)
+                    }
+                    
+                    # We found a NIC attached to the subnet
+                    $vmnic = ParseAzNetworkInterfaceID -resourceID $snet.IpConfigurations.Id 
                     $vmnic = Get-AzNetworkInterface -Name $vmnic[2]
                 
                     if (!($vmnic.VirtualMachine)) {
-                        # No VM is attached to the NIC.
+
+                        # No VM is attached to the NIC, break out of this loop
                         write-host "NIC is not for a virtual machine or it's not attached to a VM."
+                        $effroutes = "No"
 
                     } else { 
+
                         # NIC has a VM attached, check the status of the VM. 
                         $vm = Get-AzVM -Name (($vmnic.VirtualMachine.Id.Split("/") | Select-Object -Last 1)) -Status
-                
-                        if ($vm.PowerState -eq "VM running") {
+
+                        if ($vm.PowerState -ne "VM running") { 
+                            # This VM isn't Powered On, check the next VM. 
+                            write-host "VM name: $($vm.Name) cannot be used since it's not Powered On"
+                            $effroutes = "No"
+
+                        } else {
 
                             # This VM can be used to show the effective routes for this subnet
                             write-host "$($vm.Name) can be used for the effective routes for subnet $($snet.name)"
                             $nicroutes = Get-AzEffectiveRouteTable -ResourceGroupName $vm.ResourceGroupName -NetworkInterfaceName $vmnic.Name
-
-                            # Check if there is a route table attached 
-                            if (!$snet.RouteTable) {
-                                $rtattached = "No"
-                                $rtname = $null
-                            } else { 
-                                $rtattached = "Yes"
-                                $rtname = ($snet.RouteTable.ID.Split("/") | Select-Object -Last 1)
-                            }
+                            $effroutes = "Yes"
 
                             # Check if BGP Propgation is enabled
                             if ($nicroutes[0].DisableBgpRoutePropagation -eq "True") {
@@ -138,7 +151,6 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
 
                             } else { 
                                 $internetaccess = "Disabled"
-                                $inetroutes = $null
                             }
 
                             # Check for routes to the Virtual Network Gateway
@@ -146,51 +158,68 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
                                 $gatewayroutes = "Enabled"
                                 
                                 #Print effective Virtual Network Gateway Routes
-                                $vngroutes = $nicroutes | Where-Object {$_.NextHopType -eq "VirtualNetworkGateway" -and $_.State -eq "Active"} | Select-Object AddressPrefix
-                                $vngroutes = $vngroutes.AddressPrefix -join ", " 
+                                $vngroutes = $nicroutes | Where-Object {$_.NextHopType -eq "VirtualNetworkGateway" -and $_.State -eq "Active"} | Select-Object AddressPrefix,NextHopIpAddress
+                                $vngroutesaddprefix = $vngroutes.AddressPrefix -join ", " 
+                                $vngroutesnexthop = $vngroutes.NextHopIpAddress | Select-Object -Unique
 
                             } else { 
                                 $gatewayroutes = "Disabled"
-                                $vngroutes = $null
                             }
 
                             # Check for routes to the Virtual Network Appliance
-                            if (($nicroutes | Where-Object {$_.NextHopIpAddress.count -ne 0 -and $_.State -eq "Active"})) {
+                            if (($nicroutes | Where-Object {$_.NextHopType -eq "VirtualAppliance" -and $_.State -eq "Active"})) {
                                 $applianceroutes = "Enabled"
 
                                 #Print effective Virtual Network Appliance routes
-                                $nvaroutes = $nicroutes | Where-Object {$_.NextHopIpAddress.count -ne 0 -and $_.State -eq "Active"} | Select-Object AddressPrefix,NextHopIpAddress 
+                                $nvaroutes = $nicroutes | Where-Object {$_.NextHopType -eq "VirtualAppliance" -and $_.State -eq "Active"} | Select-Object AddressPrefix,NextHopIpAddress 
                                 $nvaprefix = $nvaroutes.AddressPrefix -join ", "
                                 $nvanexthop = $nvaroutes.NextHopIpAddress | Select-Object -Unique
                                 $nvanexthop = $nvanexthop -join ", "
 
 
+                            } else { 
+                                $applianceroutes = "Disabled"
                             }
-
-                            # Break the foreach loop, we found the effective routes on this route table. 
-                            break
                         } 
                     } 
                 
                 
-                }
+                
 
                 $output = New-Object System.Object
                 $output | Add-Member -MemberType NoteProperty -Name "Subscription Name" -Value $sub.Name
                 $output | Add-Member -MemberType NoteProperty -Name "vNet Name" -Value $vnet.Name
                 $output | Add-Member -MemberType NoteProperty -Name "Subnet Name" -Value $snet.Name
+                $output | Add-Member -MemberType NoteProperty -Name "EffectiveRoutes" -Value $effroutes
                 $output | Add-Member -MemberType NoteProperty -Name "RouteTable Attached" -Value $rtattached
                 $output | Add-Member -MemberType NoteProperty -Name "RouteTable Name" -Value $rtname
                 $output | Add-Member -MemberType NoteProperty -Name "BGP Propagation" -Value $bgppropagation
                 $output | Add-Member -MemberType NoteProperty -Name "Internet Routes" -Value $internetaccess
                 $output | Add-Member -MemberType NoteProperty -Name "InternetAddress Prefix" -Value $inetroutes
                 $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway Routes" -Value $gatewayroutes
-                $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway AddressPrefix" -Value $vngroutes
+                $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway AddressPrefix" -Value $vngroutesaddprefix
+                $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway NextHopIP" -Value $vngroutesnexthop
                 $output | Add-Member -MemberType NoteProperty -Name "NetworkVirtualAppliance Routes" -Value $applianceroutes
                 $output | Add-Member -MemberType NoteProperty -Name "NetworkVirtualAppliance AddressPrefix" -Value $nvaprefix
                 $output | Add-Member -MemberType NoteProperty -Name "NetworkVirtualAppliance NextHopIP" -Value $nvanexthop
 
                 $outputs.Add($output) | Out-Null
+                }
+
+                # Set the variables to $null
+                $rtname = $null
+                $internetaccess = $null
+                $inetroutes = $null
+                $gatewayroutes = $null
+                $vngroutes = $null
+                $vngroutesaddprefix = $null
+                $vngroutesnexthop = $null
+                $nvaprefix = $null
+                $nvanexthop = $null
+                $applianceroutes = $null
+                $rtattached = $null
+                $bgppropagation = $null
+                
 
             }
             
