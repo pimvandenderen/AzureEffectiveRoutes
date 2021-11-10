@@ -1,4 +1,59 @@
-﻿# Load the PowerShell Modules
+﻿<#  
+.SYNOPSIS
+This script outputs the effective route tables in an Azure tenant
+
+.DESCRIPTION
+This script checks all the subscriptions in the Azure tenants for vNETs, subnet's and route tables attached to the subnets. 
+For each subnet it will check if there is a virtual machine attached to the subnet that is up and running to get the
+effective routes for that subnet. At the moment, Azure doesn't support getting effective routes for a subnet / NIC without a running virtual machine.
+
+.EXAMPLE
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes"
+
+.EXAMPLE
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclsubscriptions "app-sub"
+
+.EXAMPLE
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclvnets "app-vnet"
+
+.EXAMPLE
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclsubnets "app-snet"
+
+EXAMPLE
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -verbose
+
+.PARAMETER filepath
+The path where you want to store the outputted HTML file.
+
+.PARAMETER exclsubscriptions
+Add the full name of the subscription(s) that you want to exclude.
+
+.PARAMETER exclvnets
+Add the full name of the VNET(s) that you want to exclude
+
+.PARAMETER exclsubnets
+Add the full name of the subnet(s) that you want to exclude.
+
+#>
+[CmdletBinding()]
+param (
+
+    [parameter(Mandatory = $true)]
+    [string] $filepath,
+
+    [parameter(Mandatory = $false)]
+    [array] $exclsubscriptions,
+
+    [parameter(Mandatory = $false)]
+    [array] $exclvnets,
+
+    [parameter(Mandatory = $false)]
+    [array] $exclsubnets
+
+
+)
+
+# Load the PowerShell Modules
 function ParseAzNetworkInterfaceID {
     param (
        [string]$resourceID
@@ -14,7 +69,7 @@ function LoadModule ($m) {
 
     # If module is imported say that and do nothing
     if (Get-Module | Where-Object {$_.Name -eq $m}) {
-        write-host "Module $m is already imported."
+        Write-Verbose "Module $m is already imported."
     }
     else {
 
@@ -32,34 +87,17 @@ function LoadModule ($m) {
             else {
 
                 # If the module is not imported, not available and not in the online gallery then abort
-                write-host "Module $m not imported, not available and not in an online gallery, exiting."
+                Write-Verbose "Module $m not imported, not available and not in an online gallery, exiting."
                 EXIT 1
             }
         }
     }
 }
 
-#Import modules
+#Import Azure modules
 LoadModule "Az.Accounts"
 LoadModule "Az.Network"
 LoadModule "Az.Compute"
-
-
-# Variables
-#-------------------
-# Exclude subscriptions that you don't want to check
-$exclsubscriptions = @("")
-
-# Exclude VNETs that you don't want to check 
-$exclvnets = @("myVNET")
-
-# Exclude subnet's that you don't want to check (comma seperated)
-$exclsubnets = @("AzureBastionSubnet", "RouteServerSubnet")
-
-# Path of the HTML file to output
-$filepath = "C:\PvD\Git\AzureEffectiveRoutes"
-#-------------------
-
 
 
 # Connect to Azure
@@ -67,13 +105,22 @@ Connect-AzAccount
 
 # Check if the output path exists
 if (Test-Path $filepath) {
+
     if ($filepath -notmatch '\\$') { 
         $filepath += '\'
     }
 
+    $filepath.Trim()
+
 } else { 
-    Write-host "File path is not found, please make sure the path $($filepath) exists "
+    Write-Verbose "File path is not found, please make sure the path $($filepath) exists "
     Break
+}
+
+# Append the Azure subnet's that don't support UDR's to the input
+$excldefaultsubnets = @("AzureBastionSubnet", "RouteServerSubnet")
+if ($exclsubnets -ne ($exclsubnets.count -eq 0)){
+    $excludedsubnets = $excldefaultsubnets + $exclsubnets | Select-Object -Unique
 }
 
 
@@ -91,7 +138,7 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
         if (($snets.count -ne 0)) {
             
             # Loop through all the subnets in the VNET, filter out excluded subnets
-            $snets = $snets | Where-Object {$exclsubnets -notcontains $_.Name}
+            $snets = $snets | Where-Object {$excludedsubnets -notcontains $_.Name}
 
             foreach ($snet in $snets) {
 
@@ -100,7 +147,7 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
 
                     # Check if there is a route table attached 
                     if (!$snet.RouteTable) {
-                        $rtattached = "rtno"
+                        $rtattached = "No"
                     } else { 
                         $rtattached = "Yes"
                         $rtname = ($snet.RouteTable.ID.Split("/") | Select-Object -Last 1)
@@ -113,8 +160,8 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
                     if (!($vmnic.VirtualMachine)) {
 
                         # No VM is attached to the NIC, break out of this loop
-                        write-host "NIC is not for a virtual machine or it's not attached to a VM."
-                        $effroutes = "effno"
+                        Write-Verbose "NIC is not for a virtual machine or it's not attached to a VM."
+                        $effroutes = "No"
 
                     } else { 
 
@@ -123,13 +170,13 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
 
                         if ($vm.PowerState -ne "VM running") { 
                             # This VM isn't Powered On, check the next VM. 
-                            write-host "VM name: $($vm.Name) cannot be used since it's not Powered On"
-                            $effroutes = "effno"
+                            Write-Verbose "VM name: $($vm.Name) cannot be used since it's not Powered On"
+                            $effroutes = "No"
 
                         } else {
 
                             # This VM can be used to show the effective routes for this subnet
-                            write-host "$($vm.Name) can be used for the effective routes for subnet $($snet.name)"
+                            Write-Verbose "$($vm.Name) can be used for the effective routes for subnet $($snet.name)"
                             $nicroutes = Get-AzEffectiveRouteTable -ResourceGroupName $vm.ResourceGroupName -NetworkInterfaceName $vmnic.Name
                             $effroutes = "Yes"
 
@@ -225,7 +272,7 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
             
         } else {
             # No subnet's are found    
-            write-host "No subnets in VNET "$vnet.Name" are found" 
+            Write-Verbose "No subnets in VNET "$vnet.Name" are found" 
         }
 
 
