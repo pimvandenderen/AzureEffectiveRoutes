@@ -17,25 +17,25 @@ Note: This works in a "top down" approach. For example: If you exclude a subscri
 $filepath <br>
 Required: _**Yes**_ <br>
 The path where you want to store the outputted HTML file. <br>
-.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" <br>
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\Git\AzureEffectiveRoutes" <br>
 
 $exclsubscriptions <br>
 Required: _No_ <br>
 Add the full name of the subscription(s) that you want to exclude. <br>
-.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclsubscriptions "app-sub" <br>
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\Git\AzureEffectiveRoutes" -exclsubscriptions "app-sub" <br>
 
 $exclvnets <br>
 Required: _No_ <br>
 Add the full name of the VNET(s) that you want to exclude <br>
-.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclvnets "app-vnet" <br>
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\Git\AzureEffectiveRoutes" -exclvnets "app-vnet" <br>
 
 $exclsubnets <br>
 Required: _No_ <br>
 Add the full name of the subnet(s) that you want to exclude. <br>
-.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclsubnets "app-snet" <br>
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\Git\AzureEffectiveRoutes" -exclsubnets "app-snet" <br>
 
 .EXAMPLE <br>
-.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -verbose <br>
+.\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\Git\AzureEffectiveRoutes" -verbose <br>
 
 
 ## Example 
