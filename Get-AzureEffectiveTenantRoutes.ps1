@@ -19,7 +19,7 @@ effective routes for that subnet. At the moment, Azure doesn't support getting e
 .EXAMPLE
 .\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -exclsubnets "app-snet"
 
-EXAMPLE
+.EXAMPLE
 .\Get-AzureEffectiveTenantRoutes.ps1 -filepath "C:\PvD\Git\AzureEffectiveRoutes" -verbose
 
 .PARAMETER filepath
