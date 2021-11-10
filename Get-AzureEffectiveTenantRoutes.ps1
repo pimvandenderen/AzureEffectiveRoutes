@@ -253,21 +253,9 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
                 $outputs.Add($output) | Out-Null
                 }
 
-                # Set the variables to $null
-                $rtname = $null
-                $internetaccess = $null
-                $inetroutes = $null
-                $gatewayroutes = $null
-                $vngroutes = $null
-                $vngroutesaddprefix = $null
-                $vngroutesnexthop = $null
-                $nvaprefix = $null
-                $nvanexthop = $null
-                $applianceroutes = $null
-                $rtattached = $null
-                $bgppropagation = $null
-                
-
+                # Clear the variables
+                Clear-Variable ("bgppropagation","rtname", "internetaccess", "inetroutes", "gatewayroutes", "vngroutes", "vngroutesaddprefix",
+                "vngroutesnexthop", "nvaprefix", "nvanexthop", "applianceroutes", "rtattached")
             }
             
         } else {
