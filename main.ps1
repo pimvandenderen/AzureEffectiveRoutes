@@ -100,7 +100,7 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
 
                     # Check if there is a route table attached 
                     if (!$snet.RouteTable) {
-                        $rtattached = "No"
+                        $rtattached = "rtno"
                     } else { 
                         $rtattached = "Yes"
                         $rtname = ($snet.RouteTable.ID.Split("/") | Select-Object -Last 1)
@@ -114,7 +114,7 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
 
                         # No VM is attached to the NIC, break out of this loop
                         write-host "NIC is not for a virtual machine or it's not attached to a VM."
-                        $effroutes = "No"
+                        $effroutes = "effno"
 
                     } else { 
 
@@ -124,7 +124,7 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
                         if ($vm.PowerState -ne "VM running") { 
                             # This VM isn't Powered On, check the next VM. 
                             write-host "VM name: $($vm.Name) cannot be used since it's not Powered On"
-                            $effroutes = "No"
+                            $effroutes = "effno"
 
                         } else {
 
@@ -134,7 +134,7 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
                             $effroutes = "Yes"
 
                             # Check if BGP Propgation is enabled
-                            if ($nicroutes[0].DisableBgpRoutePropagation -eq "True") {
+                            if (($nicroutes | Where-Object {$_.DisableBgpRoutePropagation -eq "True"}).count -ne 0) {
                                 $bgppropagation = "Disabled"
                             } else {
                                 $bgppropagation = "Enabled"
@@ -167,11 +167,11 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
                             }
 
                             # Check for routes to the Virtual Network Appliance
-                            if (($nicroutes | Where-Object {$_.NextHopType -eq "VirtualAppliance" -and $_.State -eq "Active"})) {
+                            if (($nicroutes | Where-Object {$_.Name -ne $null -and $_.NextHopIpAddress -ne $null}).count -ne 0) {
                                 $applianceroutes = "Enabled"
 
                                 #Print effective Virtual Network Appliance routes
-                                $nvaroutes = $nicroutes | Where-Object {$_.NextHopType -eq "VirtualAppliance" -and $_.State -eq "Active"} | Select-Object AddressPrefix,NextHopIpAddress 
+                                $nvaroutes = $nicroutes | Where-Object {$_.Name -ne $null -and $_.NextHopIpAddress -ne $null} | Select-Object AddressPrefix,NextHopIpAddress 
                                 $nvaprefix = $nvaroutes.AddressPrefix -join ", "
                                 $nvanexthop = $nvaroutes.NextHopIpAddress | Select-Object -Unique
                                 $nvanexthop = $nvanexthop -join ", "
@@ -267,7 +267,7 @@ $body = @"
 "@
 
 $outputs | ConvertTo-Html -Head $Header -body $body| ForEach-Object { 
-    $PSitem -replace "<td>No</td>", "<td style = 'background-color:#FF8080'>No</td>"
+    $PSitem -replace "<td>no</td>", "<td style = 'background-color:#FF8080'>No</td>"
 } | Out-File -FilePath "$filepath\AzureEffectiveRoutes.html"
 
 
