@@ -233,29 +233,30 @@ foreach ($sub in ($subscriptions | Where-Object{$exclsubscriptions -notcontains 
                 
                 
 
-                $output = New-Object System.Object
-                $output | Add-Member -MemberType NoteProperty -Name "Subscription Name" -Value $sub.Name
-                $output | Add-Member -MemberType NoteProperty -Name "vNet Name" -Value $vnet.Name
-                $output | Add-Member -MemberType NoteProperty -Name "Subnet Name" -Value $snet.Name
-                $output | Add-Member -MemberType NoteProperty -Name "EffectiveRoutes" -Value $effroutes
-                $output | Add-Member -MemberType NoteProperty -Name "RouteTable Attached" -Value $rtattached
-                $output | Add-Member -MemberType NoteProperty -Name "RouteTable Name" -Value $rtname
-                $output | Add-Member -MemberType NoteProperty -Name "BGP Propagation" -Value $bgppropagation
-                $output | Add-Member -MemberType NoteProperty -Name "Internet Routes" -Value $internetaccess
-                $output | Add-Member -MemberType NoteProperty -Name "InternetAddress Prefix" -Value $inetroutes
-                $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway Routes" -Value $gatewayroutes
-                $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway AddressPrefix" -Value $vngroutesaddprefix
-                $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway NextHopIP" -Value $vngroutesnexthop
-                $output | Add-Member -MemberType NoteProperty -Name "NetworkVirtualAppliance Routes" -Value $applianceroutes
-                $output | Add-Member -MemberType NoteProperty -Name "NetworkVirtualAppliance AddressPrefix" -Value $nvaprefix
-                $output | Add-Member -MemberType NoteProperty -Name "NetworkVirtualAppliance NextHopIP" -Value $nvanexthop
+                    $output = New-Object System.Object
+                    $output | Add-Member -MemberType NoteProperty -Name "Subscription Name" -Value $sub.Name
+                    $output | Add-Member -MemberType NoteProperty -Name "vNet Name" -Value $vnet.Name
+                    $output | Add-Member -MemberType NoteProperty -Name "Subnet Name" -Value $snet.Name
+                    $output | Add-Member -MemberType NoteProperty -Name "EffectiveRoutes" -Value $effroutes
+                    $output | Add-Member -MemberType NoteProperty -Name "RouteTable Attached" -Value $rtattached
+                    $output | Add-Member -MemberType NoteProperty -Name "RouteTable Name" -Value $rtname
+                    $output | Add-Member -MemberType NoteProperty -Name "BGP Propagation" -Value $bgppropagation
+                    $output | Add-Member -MemberType NoteProperty -Name "Internet Routes" -Value $internetaccess
+                    $output | Add-Member -MemberType NoteProperty -Name "InternetAddress Prefix" -Value $inetroutes
+                    $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway Routes" -Value $gatewayroutes
+                    $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway AddressPrefix" -Value $vngroutesaddprefix
+                    $output | Add-Member -MemberType NoteProperty -Name "VirtualNetworkGateway NextHopIP" -Value $vngroutesnexthop
+                    $output | Add-Member -MemberType NoteProperty -Name "NetworkVirtualAppliance Routes" -Value $applianceroutes
+                    $output | Add-Member -MemberType NoteProperty -Name "NetworkVirtualAppliance AddressPrefix" -Value $nvaprefix
+                    $output | Add-Member -MemberType NoteProperty -Name "NetworkVirtualAppliance NextHopIP" -Value $nvanexthop
 
-                $outputs.Add($output) | Out-Null
-                }
+                    $outputs.Add($output) | Out-Null
+
+                } 
 
                 # Clear the variables
                 Clear-Variable ("bgppropagation","rtname", "internetaccess", "inetroutes", "gatewayroutes", "vngroutes", "vngroutesaddprefix",
-                "vngroutesnexthop", "nvaprefix", "nvanexthop", "applianceroutes", "rtattached")
+                "vngroutesnexthop", "nvaprefix", "nvanexthop", "applianceroutes", "rtattached") -ErrorAction SilentlyContinue
             }
             
         } else {
@@ -295,7 +296,7 @@ TD {
 "@
 
 $body = @"
-<h1> Report Details </h1> 
+<h1> Azure Effective Routes - Report Details </h1> 
 <p> The report was run on $(get-date). </p>
 <p> The report was run by $(whoami).</p>
 <br>
